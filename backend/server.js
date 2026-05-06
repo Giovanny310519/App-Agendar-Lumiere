@@ -22,7 +22,7 @@ const MONGO_URI = process.env.MONGO_URI;
 
 // Conexión a MongoDB Atlas
 mongoose
-  .connect(MONGO_URI)
+  .connect(process.env.MONGO_URI)
   .then(() => console.log("✅ Conectado a MongoDB Atlas"))
   .catch((err) => console.error("❌ Error MongoDB:", err.message));
 
@@ -119,6 +119,6 @@ const PORT = process.env.PORT || 3000;
 
 // ⚠️ IMPORTANTE:
 // En Render SIEMPRE debe ser 0.0.0.0 (no inventes IPs mágicas)
-app.listen(PORT, "0.0.0.0", () => {
+app.listen(PORT, () => {
   console.log(`🔥 Servidor corriendo en puerto ${PORT}`);
 });
