@@ -1,18 +1,21 @@
 {
-  "name": "backend",
-  "version": "1.0.0",
-  "type": "module",
-  "description": "",
-  "main": "index.js",
+  "name": "salon-app",
+  "version": "0.0.0",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "mongoose": "^9.6.1"
+    "mongoose": "^9.6.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
   }
 }

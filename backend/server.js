@@ -1,5 +1,8 @@
 console.log("🔥 ESTE ES EL SERVER CORRECTO 🔥");
 
+import dotenv from "dotenv";
+dotenv.config();
+
 // Importación de librerías necesarias
 import express from "express";     // Framework para crear el servidor
 import cors from "cors";           // Permite peticiones desde el frontend
