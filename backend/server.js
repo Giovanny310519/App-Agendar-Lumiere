@@ -1,3 +1,5 @@
+console.log("🔥 ESTE ES EL SERVER CORRECTO 🔥");
+
 // Importación de librerías necesarias
 import express from "express";     // Framework para crear el servidor
 import cors from "cors";           // Permite peticiones desde el frontend
@@ -122,3 +124,5 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🔥 Servidor corriendo en puerto ${PORT}`);
 });
+
+console.log("MONGO_URI:", process.env.MONGO_URI);
