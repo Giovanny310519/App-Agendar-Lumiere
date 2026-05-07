@@ -104,7 +104,7 @@ app.patch("/appointments/:id", async (req, res) => {
   try {
     const updated = await Appointment.findByIdAndUpdate(
       req.params.id,
-      { status: "cancelled" },
+      { status: req.body.status || "cancelled" },
       { new: true }
     );
 
@@ -112,6 +112,24 @@ app.patch("/appointments/:id", async (req, res) => {
   } catch (error) {
     console.error("❌ Error al cancelar:", error.message);
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Eliminar una cita
+app.delete("/appointments/:id", async (req, res) => {
+  try {
+    await Appointment.findByIdAndDelete(req.params.id);
+
+    res.json({
+      success: true,
+      message: "Cita eliminada",
+    });
+  } catch (error) {
+    console.error("❌ Error eliminando:", error.message);
+
+    res.status(500).json({
+      error: error.message,
+    });
   }
 });
 
@@ -129,3 +147,21 @@ app.listen(PORT, () => {
 });
 
 console.log("MONGO_URI:", process.env.MONGO_URI);
+
+app.delete("/appointments/:id", async (req, res) => {
+  try {
+    await Appointment.findByIdAndDelete(req.params.id);
+
+    res.json({
+      success: true,
+      message: "Cita eliminada",
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+});

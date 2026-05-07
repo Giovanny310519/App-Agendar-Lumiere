@@ -14,19 +14,19 @@ const Trash2 = () => <span>🗑️</span>;
 const RotateCcw = () => <span>🔄</span>;
 
 const SERVICES = [
-  { id: "s1", name: "Corte de cabello", duration: 45, price: 35000 },
-  { id: "s2", name: "Cepillado", duration: 50, price: 45000 },
-  { id: "s3", name: "Coloración", duration: 120, price: 180000 },
-  { id: "s4", name: "Manicure", duration: 60, price: 40000 },
-  { id: "s5", name: "Pedicure", duration: 60, price: 45000 },
-  { id: "s6", name: "Peinado de evento", duration: 75, price: 70000 },
+  { _id: "s1", name: "Corte de cabello", duration: 45, price: 35000 },
+  { _id: "s2", name: "Cepillado", duration: 50, price: 45000 },
+  { _id: "s3", name: "Coloración", duration: 120, price: 180000 },
+  { _id: "s4", name: "Manicure", duration: 60, price: 40000 },
+  { _id: "s5", name: "Pedicure", duration: 60, price: 45000 },
+  { _id: "s6", name: "Peinado de evento", duration: 75, price: 70000 },
 ];
 
 const STYLISTS = [
-  { id: "p1", name: "Laura Gómez", specialties: ["Corte de cabello", "Cepillado", "Peinado de evento"] },
-  { id: "p2", name: "Camila Torres", specialties: ["Coloración", "Corte de cabello", "Cepillado"] },
-  { id: "p3", name: "Andrés Ruiz", specialties: ["Corte de cabello", "Peinado de evento"] },
-  { id: "p4", name: "Sofía Pérez", specialties: ["Manicure", "Pedicure"] },
+  { _id: "p1", name: "Laura Gómez", specialties: ["Corte de cabello", "Cepillado", "Peinado de evento"] },
+  { _id: "p2", name: "Camila Torres", specialties: ["Coloración", "Corte de cabello", "Cepillado"] },
+  { _id: "p3", name: "Andrés Ruiz", specialties: ["Corte de cabello", "Peinado de evento"] },
+  { _id: "p4", name: "Sofía Pérez", specialties: ["Manicure", "Pedicure"] },
 ];
 
 const TIME_SLOTS = ["09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00", "18:00"];
@@ -51,7 +51,7 @@ const ARCH = {
 
 const initialAppointments = [
   {
-    id: "a1",
+    _id: "a1",
     customerName: "María López",
     phone: "3001234567",
     serviceId: "s1",
@@ -62,7 +62,7 @@ const initialAppointments = [
     notes: "Retocar puntas",
   },
   {
-    id: "a2",
+    _id: "a2",
     customerName: "Daniela Ríos",
     phone: "3015558899",
     serviceId: "s3",
@@ -95,14 +95,14 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 
-function uid(prefix = "id") {
+function uid(prefix = "_id") {
   return `${prefix}_${Math.random().toString(36).slice(2, 9)}`;
 }
 
 export default function SalonAppointmentApp() {
   const [appointments, setAppointments] = useState([]);
-  const [selectedService, setSelectedService] = useState(SERVICES[0].id);
-  const [selectedStylist, setSelectedStylist] = useState(STYLISTS[0].id);
+  const [selectedService, setSelectedService] = useState(SERVICES[0]._id);
+  const [selectedStylist, setSelectedStylist] = useState(STYLISTS[0]._id);
   const [date, setDate] = useState(todayISO());
   const [time, setTime] = useState(TIME_SLOTS[0]);
   const [customerName, setCustomerName] = useState("");
@@ -113,140 +113,75 @@ export default function SalonAppointmentApp() {
   const [message, setMessage] = useState({ type: "info", text: "" });
 
   // Cargar citas desde el backend en lugar de localStorage
-useEffect(() => {
-  const fetchAppointments = async () => {
-    try {
-      const res = await fetch("https://app-agendar-lumiere.onrender.com/appointments");
-      const data = await res.json();
-      setAppointments(data);
-    } catch (error) {
-      console.error("Error cargando citas desde backend:", error);
-      // fallback a localStorage si el backend falla
-      const cached = localStorage.getItem("salon-appointments-v1");
-      if (cached) {
-        setAppointments(JSON.parse(cached));
-      }
-    }
-  };
-
-  fetchAppointments();
-}, []);
-
-  useEffect(() => {
-    if (appointments.length) {
-      localStorage.setItem("salon-appointments-v1", JSON.stringify(appointments));
-    }
-  }, [appointments]);
-
-  const selectedServiceObj = SERVICES.find((s) => s.id === selectedService);
-  const selectedStylistObj = STYLISTS.find((p) => p.id === selectedStylist);
-
-  const availableStylists = useMemo(() => {
-    return STYLISTS.filter((stylist) => stylist.specialties.includes(selectedServiceObj?.name));
-  }, [selectedServiceObj]);
-
-  useEffect(() => {
-    if (availableStylists.length && !availableStylists.some((s) => s.id === selectedStylist)) {
-      setSelectedStylist(availableStylists[0].id);
-    }
-  }, [availableStylists, selectedStylist]);
-
-  const filteredAppointments = useMemo(() => {
-    return appointments
-      .filter((a) => (statusFilter === "Todas" ? true : a.status === statusFilter))
-      .filter((a) => {
-        const query = search.trim().toLowerCase();
-        if (!query) return true;
-        const serviceName = SERVICES.find((s) => s.id === a.serviceId)?.name || "";
-        const stylistName = STYLISTS.find((p) => p.id === a.stylistId)?.name || "";
-        return [a.customerName, a.phone, serviceName, stylistName, a.date, a.time, a.status]
-          .join(" ")
-          .toLowerCase()
-          .includes(query);
-      })
-      .sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
-  }, [appointments, statusFilter, search]);
-
-  const stats = useMemo(() => {
-    const confirmed = appointments.filter((a) => a.status === "Confirmada").length;
-    const pending = appointments.filter((a) => a.status === "Pendiente").length;
-    const revenue = appointments
-      .filter((a) => a.status !== "Cancelada")
-      .reduce((acc, a) => acc + (SERVICES.find((s) => s.id === a.serviceId)?.price || 0), 0);
-    return { total: appointments.length, confirmed, pending, revenue };
-  }, [appointments]);
-
-  const slotBusy = (d, t, stylistId) =>
-    appointments.some((a) => a.date === d && a.time === t && a.stylistId === stylistId && a.status !== "Cancelada");
-
-  // URL de tu backend en Render
-const API_URL = "https://app-agendar-lumiere.onrender.com";
-
-const createAppointment = async (e) => {
-  e.preventDefault();
-
-  if (!customerName.trim() || !phone.trim()) {
-    setMessage({ type: "error", text: "Completa el nombre y el teléfono." });
-    return;
-  }
-
+const updateStatus = async (_id, nextStatus) => {
   try {
-    const response = await fetch(`${API_URL}/appointments`, {
-      method: "POST",
+    const response = await fetch(`${API_URL}/appointments/${id}`, {
+      method: "PATCH",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        serviceId: selectedService,
-        staffId: selectedStylist,
-        date,
-        time,
-        clientName: customerName,
-        clientEmail: "",
-        clientPhone: phone,
-      }),
+  status: nextStatus,
+}),
     });
 
     if (!response.ok) {
-      throw new Error("No se pudo guardar la cita");
+      throw new Error("No se pudo actualizar");
     }
 
-    const newAppointment = await response.json();
+    const updatedAppointment = await response.json();
 
-    setAppointments((prev) => [newAppointment, ...prev]);
-    setCustomerName("");
-    setPhone("");
-    setNotes("");
+    setAppointments((prev) =>
+      prev.map((a) =>
+        a._id === updatedAppointment._id
+          ? updatedAppointment
+          : a
+      )
+    );
 
-    setMessage({ type: "success", text: "Cita creada correctamente en el backend 🚀" });
+    setMessage({
+      type: "success",
+      text: `Cita actualizada correctamente`,
+    });
+
   } catch (error) {
     console.error(error);
-    setMessage({ type: "error", text: "Error conectando con el servidor" });
+
+    setMessage({
+      type: "error",
+      text: "Error actualizando cita",
+    });
   }
 };
 
-    setAppointments((prev) => [newAppointment, ...prev]);
-    setCustomerName("");
-    setPhone("");
-    setNotes("");
-    setMessage({ type: "success", text: "Cita creada correctamente." });
-  };
+  const deleteAppointment = async (_id) => {
+  try {
+    const response = await fetch(`${API_URL}/appointments/${_id}`, {
+      method: "DELETE",
+    });
 
-  const updateStatus = (id, nextStatus) => {
-    setAppointments((prev) => prev.map((a) => (a.id === id ? { ...a, status: nextStatus } : a)));
-    setMessage({ type: "success", text: `La cita fue marcada como ${nextStatus.toLowerCase()}.` });
-  };
+    if (!response.ok) {
+      throw new Error("No se pudo eliminar");
+    }
 
-  const deleteAppointment = (id) => {
-    setAppointments((prev) => prev.filter((a) => a.id !== id));
-    setMessage({ type: "info", text: "Cita eliminada." });
-  };
+    setAppointments((prev) =>
+      prev.filter((a) => a._id !== _id)
+    );
 
-  const resetDemo = () => {
-    setAppointments(initialAppointments);
-    localStorage.setItem("salon-appointments-v1", JSON.stringify(initialAppointments));
-    setMessage({ type: "info", text: "Datos de ejemplo restaurados." });
-  };
+    setMessage({
+      type: "success",
+      text: "Cita eliminada correctamente",
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    setMessage({
+      type: "error",
+      text: "Error eliminando cita",
+    });
+  }
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-pink-50 text-slate-900">
@@ -262,10 +197,7 @@ const createAppointment = async (e) => {
               Arquitectura separada en frontend, backend y base de datos, con una interfaz funcional para agendar, consultar y administrar citas.
             </p>
           </div>
-          <button
-            onClick={resetDemo}
-            className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-800"
-          >
+          
             <RotateCcw className="h-4 w-4" />
             Restaurar demo
           </button>
@@ -319,7 +251,7 @@ const createAppointment = async (e) => {
                     <Field label="Servicio">
                       <select value={selectedService} onChange={(e) => setSelectedService(e.target.value)} className={inputClass}>
                         {SERVICES.map((service) => (
-                          <option key={service.id} value={service.id}>
+                          <option key={service._id} value={service._id}>
                             {service.name} - {moneyCOP(service.price)}
                           </option>
                         ))}
@@ -328,7 +260,7 @@ const createAppointment = async (e) => {
                     <Field label="Profesional">
                       <select value={selectedStylist} onChange={(e) => setSelectedStylist(e.target.value)} className={inputClass}>
                         {availableStylists.map((stylist) => (
-                          <option key={stylist.id} value={stylist.id}>
+                          <option key={stylist._id} value={stylist._id}>
                             {stylist.name}
                           </option>
                         ))}
@@ -393,17 +325,17 @@ const createAppointment = async (e) => {
                     <EmptyState />
                   ) : (
                     filteredAppointments.map((a) => {
-                      const service = SERVICES.find((s) => s.id === a.serviceId);
-                      const stylist = STYLISTS.find((s) => s.id === a.stylistId);
+                      const service = SERVICES.find((s) => s._id === a.serviceId);
+                      const stylist = STYLISTS.find((s) => s._id === a.staffId);
                       return (
-                        <div key={a.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                        <div key={a._id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                           <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
                             <div>
                               <div className="flex items-center gap-2">
-                                <h3 className="font-semibold">{a.customerName}</h3>
+                                <h3 className="font-semibold">{a.clientName}</h3>
                                 <StatusPill status={a.status} />
                               </div>
-                              <p className="text-sm text-slate-600">{a.phone}</p>
+                              <p className="text-sm text-slate-600">{a.clientPhone}</p>
                               <p className="mt-1 text-sm text-slate-700">
                                 {service?.name} · {moneyCOP(service?.price || 0)}
                               </p>
@@ -414,16 +346,16 @@ const createAppointment = async (e) => {
                             </div>
                             <div className="flex flex-wrap gap-2">
                               {a.status !== "Confirmada" && (
-                                <button onClick={() => updateStatus(a.id, "Confirmada")} className={actionBtnClass}>
+                                <button onClick={() => updateStatus(a._id, "Confirmada")} className={actionBtnClass}>
                                   Confirmar
                                 </button>
                               )}
                               {a.status !== "Cancelada" && (
-                                <button onClick={() => updateStatus(a.id, "Cancelada")} className={classNames(actionBtnClass, "bg-red-50 text-red-700 hover:bg-red-100")}>
+                                <button onClick={() => updateStatus(a._id, "Cancelada")} className={classNames(actionBtnClass, "bg-red-50 text-red-700 hover:bg-red-100")}>
                                   Cancelar
                                 </button>
                               )}
-                              <button onClick={() => deleteAppointment(a.id)} className={classNames(actionBtnClass, "bg-slate-100 text-slate-700 hover:bg-slate-200")}>
+                              <button onClick={() => deleteAppointment(a._id)} className={classNames(actionBtnClass, "bg-slate-100 text-slate-700 hover:bg-slate-200")}>
                                 <Trash2 className="h-4 w-4" />
                               </button>
                             </div>
@@ -446,10 +378,10 @@ const createAppointment = async (e) => {
 
             <Card title="Modelo de datos" icon={<Database className="h-5 w-5" />}>
               <div className="space-y-3 text-sm text-slate-700">
-                <DataRow table="clients" cols="id, name, phone, email, created_at" />
-                <DataRow table="services" cols="id, name, duration_minutes, price, active" />
-                <DataRow table="stylists" cols="id, name, specialty, active" />
-                <DataRow table="appointments" cols="id, client_id, service_id, stylist_id, date, time, status, notes" />
+                <DataRow table="clients" cols="_id, name, phone, email, created_at" />
+                <DataRow table="services" cols="_id, name, duration_minutes, price, active" />
+                <DataRow table="stylists" cols="_id, name, specialty, active" />
+                <DataRow table="appointments" cols="_id, client_id, service_id, stylist_id, date, time, status, notes" />
                 <DataRow table="appointment_logs" cols="id, appointment_id, action, created_at" />
               </div>
             </Card>
@@ -460,8 +392,8 @@ const createAppointment = async (e) => {
                 <Endpoint method="GET" path="/api/stylists" />
                 <Endpoint method="GET" path="/api/appointments?date=YYYY-MM-DD" />
                 <Endpoint method="POST" path="/api/appointments" />
-                <Endpoint method="PATCH" path="/api/appointments/:id" />
-                <Endpoint method="DELETE" path="/api/appointments/:id" />
+                <Endpoint method="PATCH" path="/api/appointments/:_id" />
+                <Endpoint method="DELETE" path="/api/appointments/:_id" />
               </div>
             </Card>
           </div>
